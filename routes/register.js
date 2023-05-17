@@ -119,7 +119,7 @@ router.post(
     pool
       .query(theQuery, values)
       .then((result) => {
-        //We successfully added the user!
+      //Here's the vertification for email
         response.status(201).send({
           success: true,
           email: request.body.email,
@@ -127,8 +127,8 @@ router.post(
         sendEmail(
           "our.email@lab.com",
           request.body.email,
-          "Welcome to our App!",
-          "Please verify your Email account."
+          "Welcome to Team 6 app!",
+          "Please verify your Email."
         );
       })
       .catch((error) => {
