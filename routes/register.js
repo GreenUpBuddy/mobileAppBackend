@@ -67,8 +67,39 @@ router.post(
     }
   },
   (request, response, next) => {
+
     //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
     //If you want to read more: https://stackoverflow.com/a/8265319
+    let theQuery =
+      "SELECT * FROM Members WHERE Username=$1 OR Email=$2";
+    let values = [request.body.username, request.body.email];
+    pool
+      .query(theQuery, values)
+      .then((result) => {
+        if (result.rowCount > 0) {
+          // Check if the username or email is already in use
+          const existingUser = result.rows[0];
+          if (existingUser.username === request.body.username) {
+            response.status(400).send({
+              message: "Username exists",
+            });
+          } else if (existingUser.email === request.body.email) {
+            response.status(400).send({
+              message: "Email exists",
+            });
+          }
+        } else {
+          next();
+        }
+      })
+      .catch((error) => {
+        response.status(400).send({
+          message: "Sother error, see detail",
+        });
+      });
+  },
+  (request, response, next) => {
+    
     let theQuery =
       "INSERT INTO MEMBERS(FirstName, LastName, Username, Email) VALUES ($1, $2, $3, $4) RETURNING Email, MemberID";
     let values = [
@@ -108,6 +139,7 @@ router.post(
     //We're storing salted hashes to make our application more secure
     //If you're interested as to what that is, and why we should use it
     //watch this youtube video: https://www.youtube.com/watch?v=8ZtInClXe1Q
+    const verificationCode = generateVerificationCode();
     let salt = generateSalt(32);
     let salted_hash = generateHash(request.body.password, salt);
 
@@ -117,7 +149,7 @@ router.post(
     pool
       .query(theQuery, values)
       .then((result) => {
-      //Here's the vertification for email
+        //We successfully added the user!
         response.status(201).send({
           success: true,
           email: request.body.email,
@@ -125,8 +157,8 @@ router.post(
         sendEmail(
           "our.email@lab.com",
           request.body.email,
-          "Welcome to Team 6 app!",
-          "Please verify your Email."
+          "Welcome to our App!",
+          "Please verify your Email account."
         );
       })
       .catch((error) => {
@@ -148,6 +180,21 @@ router.post(
       });
   }
 );
+
+function generateVerificationCode() {
+  const length = 6; // Length of the verification code
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; // Characters to choose from
+  let code = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters.charAt(randomIndex);
+  }
+
+  return code;
+}
+
 
 router.get("/hash_demo", (request, response) => {
   let password = "hello12345";
