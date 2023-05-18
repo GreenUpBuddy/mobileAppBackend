@@ -55,7 +55,6 @@ router.post(
     if (
       isStringProvided(request.body.first) &&
       isStringProvided(request.body.last) &&
-      isStringProvided(request.body.nick) &&
       isStringProvided(request.body.username) &&
       isStringProvided(request.body.email) &&
       isStringProvided(request.body.password)
@@ -71,11 +70,10 @@ router.post(
     //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
     //If you want to read more: https://stackoverflow.com/a/8265319
     let theQuery =
-      "INSERT INTO MEMBERS(FirstName, LastName, Username, Email) VALUES ($1, $2, $3, $4, $5) RETURNING Email, MemberID";
+      "INSERT INTO MEMBERS(FirstName, LastName, Username, Email) VALUES ($1, $2, $3, $4) RETURNING Email, MemberID";
     let values = [
       request.body.first,
       request.body.last,
-      request.body.nick,
       request.body.username,
       request.body.email,
     ];
